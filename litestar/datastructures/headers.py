@@ -462,10 +462,18 @@ class Accept:
             provided type is returned as-is.
         """
         types = [MediaTypeHeader(t) for t in provided_types]
+        best_matches = [
+            max(
+                (accepted for accepted in self._accepted_types if accepted.match(provided)),
+                key=lambda accepted: accepted.priority[1],
+                default=None,
+            )
+            for provided in types
+        ]
 
         for accepted in self._accepted_types:
-            for provided in types:
-                if provided.match(accepted):
+            for provided, best_match in zip(types, best_matches, strict=True):
+                if best_match is accepted and accepted.priority[0] > 0:
                     # Return the accepted type with wildcards replaced
                     # by concrete parts from the provided type
                     result = copy(provided)

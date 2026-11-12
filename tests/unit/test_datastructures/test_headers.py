@@ -368,14 +368,19 @@ def test_etag_to_header_weak() -> None:
         ("text/plain", ["text/html"], None),
         ("text/*", ["text/html"], "text/html"),
         ("*/*", ["text/html"], "text/html"),
-        ("text/plain;p=test", ["text/plain"], "text/plain"),
-        ("text/plain", ["text/plain;p=test"], None),
+        ("text/plain;p=test", ["text/plain"], None),
+        ("text/plain", ["text/plain;p=test"], "text/plain;p=test"),
         ("text/plain;p=test", ["text/plain;p=test"], "text/plain;p=test"),
         ("text/plain", ["text/*"], "text/plain"),
         ("text/html", ["*/*"], "text/html"),
         ("text/plain;q=0.8,text/html", ["text/plain", "text/html"], "text/html"),
         ("text/plain;q=ab,text/html", ["text/plain", "text/html"], "text/plain"),
         ("text/*,text/html", ["text/plain", "text/html"], "text/html"),
+        ("text/plain;q=0", ["text/plain"], None),
+        ("text/*;q=1,text/html;q=0", ["text/html"], None),
+        ("text/*;q=1,text/html;q=0", ["text/html", "text/plain"], "text/plain"),
+        ("text/*;q=1,text/html;level=1;q=0", ["text/html"], "text/html"),
+        ("text/*;q=1,text/html;level=1;q=0", ["text/html;level=1"], None),
     ),
 )
 def test_accept_best_match(accept_value: str, provided_types: list[str], best_match: Optional[str]) -> None:
@@ -386,3 +391,4 @@ def test_accept_best_match(accept_value: str, provided_types: list[str], best_ma
 def test_accept_accepts() -> None:
     accept = Accept("text/plain;q=0.8,text/html")
     assert accept.accepts(MediaType.TEXT)
+    assert not Accept("text/plain;q=0").accepts("text/plain")
